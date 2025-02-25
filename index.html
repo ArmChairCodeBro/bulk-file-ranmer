@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulk File Renamer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .preview {
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #fileInputs {
+            margin-bottom: 10px;
+        }
+        .file-input-wrapper {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bulk File Renamer</h1>
+    
+    <div>
+        <h3>1. Upload Folders</h3>
+        <div id="fileInputs">
+            <div class="file-input-wrapper">
+                <input type="file" class="folderInput" webkitdirectory directory accept="*/*">
+            </div>
+        </div>
+        <button onclick="addFolderInput()">Add Another Folder</button>
+        <p>Note: Folder names will be used as prefixes with sequential numbers (e.g., Folder-1, Folder-2).</p>
+    </div>
+
+    <div>
+        <button onclick="previewRename()">Preview Rename</button>
+        <button onclick="downloadRenamed()" disabled id="downloadBtn">Download Renamed Files</button>
+    </div>
+
+    <div class="preview" id="preview"></div>
+
+    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</body>
+</html>
