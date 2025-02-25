@@ -18,27 +18,15 @@ function addFolderInput() {
 function updateFiles() {
     files = [];
     const inputs = document.getElementsByClassName('folderInput');
-    const totalInputs = inputs.length;
-    let processedInputs = 0;
-
-    function processInput(input) {
+    Array.from(inputs).forEach(input => {
         if (input.files.length > 0) {
             files = files.concat(Array.from(input.files));
         }
-        processedInputs++;
-        updateProgress(processedInputs / totalInputs * 50); // 50% for upload
-        if (processedInputs === totalInputs) {
-            previewRename();
-        }
-    }
-
-    Array.from(inputs).forEach(input => {
-        processInput(input);
     });
+    // No progress bar update here—reset to 0% if already visible
+    updateProgress(0);
+    document.getElementById('downloadBtn').disabled = files.length === 0;
 }
-
-// Initial setup for the first input
-document.querySelector('.folderInput').addEventListener('change', updateFiles);
 
 function groupFilesByFolder(files) {
     const groupedFiles = {};
@@ -77,24 +65,32 @@ function updateProgress(percentage) {
 }
 
 function previewRename() {
-    updateProgress(50); // Start preview at 50%
+    updateProgress(0); // Start at 0% for preview
     const groupedFiles = groupFilesByFolder(files);
     const previewDiv = document.getElementById('preview');
     previewDiv.innerHTML = '<h3>Preview:</h3>';
     
+    let totalFiles = 0;
+    for (const folderFiles of Object.values(groupedFiles)) {
+        totalFiles += folderFiles.length;
+    }
+    let processedFiles = 0;
+
     for (const [folderName, folderFiles] of Object.entries(groupedFiles)) {
         folderFiles.forEach((file, index) => {
             const newName = generateNewName(file, index, folderName);
             previewDiv.innerHTML += `<p>${file.webkitRelativePath} → ${newName}</p>`;
+            processedFiles++;
+            updateProgress((processedFiles / totalFiles) * 50); // 0-50% for preview
         });
     }
     
     document.getElementById('downloadBtn').disabled = files.length === 0;
-    updateProgress(75); // Preview done, 75% complete
+    updateProgress(50); // Preview done, 50% complete
 }
 
 function downloadRenamed() {
-    updateProgress(75); // Start download at 75%
+    updateProgress(50); // Start download at 50%
     const groupedFiles = groupFilesByFolder(files);
     const zip = new JSZip();
     
@@ -110,7 +106,7 @@ function downloadRenamed() {
             const newName = generateNewName(file, index, folderName);
             folder.file(newName, file);
             processedFiles++;
-            updateProgress(75 + (processedFiles / totalFiles) * 25); // 75-100% for ZIP
+            updateProgress(50 + (processedFiles / totalFiles) * 50); // 50-100% for ZIP
         });
     }
     
@@ -122,3 +118,6 @@ function downloadRenamed() {
         updateProgress(100); // Download complete
     });
 }
+
+// Initial setup for the first input
+document.querySelector('.folderInput').addEventListener('change', updateFiles);
