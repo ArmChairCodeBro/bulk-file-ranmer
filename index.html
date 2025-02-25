@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bulk File Renamer</title>
+    <title>Bulk File Renamer - Team Edition</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,10 +21,27 @@
         .file-input-wrapper {
             margin: 5px 0;
         }
+        #progressBar {
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        #progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            transition: width 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body>
     <h1>Bulk File Renamer - Team Edition</h1>
+    
     <div>
         <h3>1. Upload Folders</h3>
         <div id="fileInputs">
@@ -39,6 +56,10 @@
     <div>
         <button onclick="previewRename()">Preview Rename</button>
         <button onclick="downloadRenamed()" disabled id="downloadBtn">Download Renamed Files</button>
+    </div>
+
+    <div id="progressBar">
+        <div id="progress">0%</div>
     </div>
 
     <div class="preview" id="preview"></div>
