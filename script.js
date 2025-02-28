@@ -1,23 +1,53 @@
 let files = [];
+let folderMappings = {};
 
-function addFolderInput() {
+document.getElementById('csvInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.name.endsWith('.csv')) {
+        Papa.parse(file, {
+            complete: function(results) {
+                folderMappings = {};
+                results.data.forEach(row => {
+                    if (row.original_folder_name && row.new_folder_name) {
+                        folderMappings[row.original_folder_name] = row.new_folder_name;
+                    }
+                });
+                console.log('Folder mappings loaded:', folderMappings);
+                previewRename(); // Re-run preview if files are already uploaded
+            },
+            header: true,
+            skipEmptyLines: true
+        });
+    } else {
+        alert('Please upload a valid CSV file.');
+        folderMappings = {};
+    }
+});
+
+function addFileInput() {
     const fileInputsDiv = document.getElementById('fileInputs');
     const newInputWrapper = document.createElement('div');
     newInputWrapper.className = 'file-input-wrapper';
     const newInput = document.createElement('input');
     newInput.type = 'file';
-    newInput.className = 'folderInput';
+    newInput.className = 'fileInput';
+    newInput.setAttribute('accept', '*/*');
     newInput.setAttribute('webkitdirectory', '');
     newInput.setAttribute('directory', '');
-    newInput.setAttribute('accept', '*/*');
     newInput.addEventListener('change', updateFiles);
     newInputWrapper.appendChild(newInput);
     fileInputsDiv.appendChild(newInputWrapper);
 }
 
+function addMultipleInputs(count) {
+    for (let i = 0; i < count; i++) {
+        addFileInput();
+    }
+}
+
 function updateFiles() {
     files = [];
-    const inputs = document.getElementsByClassName('folderInput');
+    const inputs = document.getElementsByClassName('fileInput');
     Array.from(inputs).forEach(input => {
         if (input.files.length > 0) {
             files = files.concat(Array.from(input.files));
@@ -28,18 +58,29 @@ function updateFiles() {
     document.getElementById('downloadBtn').disabled = files.length === 0;
 }
 
+// Initial setup for the first input
+document.querySelector('.fileInput').addEventListener('change', updateFiles);
+
 function groupFilesByFolder(files) {
     const groupedFiles = {};
     
     files.forEach(file => {
-        // Extract folder name from webkitRelativePath (e.g., "folder1/file.txt" -> "folder1")
-        const pathParts = file.webkitRelativePath.split('/');
-        const folderName = pathParts.length > 1 ? pathParts[0] : 'root';
-        const fileName = pathParts[pathParts.length - 1];
+        // Extract folder name from webkitRelativePath if available, otherwise use 'root'
+        let folderName = 'root';
+        if (file.webkitRelativePath) {
+            const pathParts = file.webkitRelativePath.split('/');
+            folderName = pathParts.length > 1 ? pathParts[0] : 'root';
+        }
+        const fileName = file.name;
         
         // Skip .DS_Store files
         if (fileName === '.DS_Store') {
             return; // Skip this file
+        }
+        
+        // Apply folder mapping if it exists
+        if (folderMappings[folderName]) {
+            folderName = folderMappings[folderName];
         }
         
         if (!groupedFiles[folderName]) {
@@ -79,7 +120,7 @@ function previewRename() {
     for (const [folderName, folderFiles] of Object.entries(groupedFiles)) {
         folderFiles.forEach((file, index) => {
             const newName = generateNewName(file, index, folderName);
-            previewDiv.innerHTML += `<p>${file.webkitRelativePath} → ${newName}</p>`;
+            previewDiv.innerHTML += `<p>${file.webkitRelativePath || file.name} → ${newName}</p>`;
             processedFiles++;
             updateProgress((processedFiles / totalFiles) * 50); // 0-50% for preview
         });
@@ -118,6 +159,3 @@ function downloadRenamed() {
         updateProgress(100); // Download complete
     });
 }
-
-// Initial setup for the first input
-document.querySelector('.folderInput').addEventListener('change', updateFiles);
