@@ -89,6 +89,15 @@ function groupFilesByFolder(files) {
         groupedFiles[folderName].push(file);
     });
     
+    // Sort files within each folder by their webkitRelativePath or name to maintain original order
+    for (let folder in groupedFiles) {
+        groupedFiles[folder].sort((a, b) => {
+            const pathA = a.webkitRelativePath || a.name;
+            const pathB = b.webkitRelativePath || b.name;
+            return pathA.localeCompare(pathB);
+        });
+    }
+    
     return groupedFiles;
 }
 
