@@ -74,23 +74,34 @@ dropZone.addEventListener('drop', (e) => {
             const reader = entry.createReader();
             reader.readEntries(entries => {
                 console.log(`Reading entries for ${path}:`, entries.length);
+                const promises = [];
                 entries.forEach(entry => {
                     if (entry.isDirectory) {
-                        processFolder(entry, path + entry.name + '/').then(resolve);
+                        promises.push(processFolder(entry, path + entry.name + '/'));
                     } else {
-                        entry.file(file => {
-                            console.log(`Adding file: ${path}${entry.name}`);
-                            file.webkitRelativePath = path + entry.name;
-                            files.push(file);
-                            resolve();
-                        }, error => {
-                            console.error('Error reading file:', error);
-                        });
+                        promises.push(new Promise((fileResolve) => {
+                            entry.file(file => {
+                                console.log(`Adding file: ${path}${entry.name}`);
+                                file.webkitRelativePath = path + entry.name;
+                                files.push(file);
+                                fileResolve();
+                            }, error => {
+                                console.error('Error reading file:', error);
+                                fileResolve(); // Continue even if a file fails
+                            });
+                        }));
                     }
                 });
-                if (entries.length === 0) resolve();
+                Promise.all(promises).then(() => {
+                    if (entries.length === 0) resolve();
+                    resolve();
+                }).catch(error => {
+                    console.error('Error in processing entries:', error);
+                    resolve(); // Continue processing despite errors
+                });
             }, error => {
                 console.error('Error reading entries:', error);
+                resolve(); // Continue processing despite errors
             });
         });
     }
