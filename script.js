@@ -50,13 +50,16 @@ const dropZone = document.getElementById('dropZone');
 dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dropZone.classList.add('dragover');
+    console.log('Drag over detected');
 });
 dropZone.addEventListener('dragleave', () => {
     dropZone.classList.remove('dragover');
+    console.log('Drag leave detected');
 });
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
+    console.log('Drop detected, items:', e.dataTransfer.items.length);
     const folderItems = Array.from(e.dataTransfer.items).filter(item => item.webkitGetAsEntry().isDirectory);
     if (folderItems.length === 0) {
         alert('Please drop folders only.');
@@ -70,29 +73,39 @@ dropZone.addEventListener('drop', (e) => {
         return new Promise((resolve) => {
             const reader = entry.createReader();
             reader.readEntries(entries => {
+                console.log(`Reading entries for ${path}:`, entries.length);
                 entries.forEach(entry => {
                     if (entry.isDirectory) {
                         processFolder(entry, path + entry.name + '/').then(resolve);
                     } else {
                         entry.file(file => {
+                            console.log(`Adding file: ${path}${entry.name}`);
                             file.webkitRelativePath = path + entry.name;
                             files.push(file);
                             resolve();
+                        }, error => {
+                            console.error('Error reading file:', error);
                         });
                     }
                 });
                 if (entries.length === 0) resolve();
+            }, error => {
+                console.error('Error reading entries:', error);
             });
         });
     }
 
     folderItems.forEach(item => {
         const entry = item.webkitGetAsEntry();
+        console.log(`Processing folder: ${entry.name}`);
         processFolder(entry).then(() => {
             processedFolders++;
+            console.log(`Processed ${processedFolders} of ${totalFolders} folders`);
             if (processedFolders === totalFolders) {
                 updateFiles();
             }
+        }).catch(error => {
+            console.error('Error processing folder:', error);
         });
     });
 });
