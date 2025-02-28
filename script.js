@@ -45,14 +45,59 @@ function addMultipleInputs(count) {
     }
 }
 
-function updateFiles() {
+// Drag-and-Drop handling
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const folderItems = Array.from(e.dataTransfer.items).filter(item => item.webkitGetAsEntry().isDirectory);
+    if (folderItems.length === 0) {
+        alert('Please drop folders only.');
+        return;
+    }
     files = [];
-    const inputs = document.getElementsByClassName('fileInput');
-    Array.from(inputs).forEach(input => {
-        if (input.files.length > 0) {
-            files = files.concat(Array.from(input.files));
-        }
+    let processedFolders = 0;
+    const totalFolders = folderItems.length;
+
+    function processFolder(entry, path = '') {
+        return new Promise((resolve) => {
+            const reader = entry.createReader();
+            reader.readEntries(entries => {
+                entries.forEach(entry => {
+                    if (entry.isDirectory) {
+                        processFolder(entry, path + entry.name + '/').then(resolve);
+                    } else {
+                        entry.file(file => {
+                            file.webkitRelativePath = path + entry.name;
+                            files.push(file);
+                            resolve();
+                        });
+                    }
+                });
+                if (entries.length === 0) resolve();
+            });
+        });
+    }
+
+    folderItems.forEach(item => {
+        const entry = item.webkitGetAsEntry();
+        processFolder(entry).then(() => {
+            processedFolders++;
+            if (processedFolders === totalFolders) {
+                updateFiles();
+            }
+        });
     });
+});
+
+function updateFiles() {
     // No progress bar update here—reset to 0% if already visible
     updateProgress(0);
     document.getElementById('downloadBtn').disabled = files.length === 0;

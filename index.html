@@ -15,7 +15,18 @@
             max-height: 200px;
             overflow-y: auto;
         }
-        #fileInputs {
+        #dropZone {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+            background-color: #f9f9f9;
+        }
+        #dropZone.dragover {
+            background-color: #e1e1e1;
+            border-color: #999;
+        }
+        #fileInputs, #csvInput {
             margin-bottom: 10px;
         }
         .file-input-wrapper {
@@ -43,7 +54,8 @@
     <h1>Bulk File Renamer - Team Edition</h1>
     
     <div>
-        <h3>1. Upload Folders</h3>
+        <h3>1. Upload Folders (Drag & Drop or Select)</h3>
+        <div id="dropZone">Drag and drop multiple folders here, or use the inputs below.</div>
         <div id="fileInputs">
             <div class="file-input-wrapper">
                 <input type="file" class="fileInput" accept="*/*" webkitdirectory directory>
@@ -51,7 +63,7 @@
         </div>
         <button onclick="addMultipleInputs(3)">Add 3 More Inputs</button>
         <button onclick="addFileInput()">Add One More Input</button>
-        <p>Select one folder per input (click the folder icon). Use 'Add 3 More Inputs' for bulk selection or 'Add One More Input' for single folders. Folder names will be used as prefixes with sequential numbers (e.g., Folder-1, Folder-2).</p>
+        <p>Select one folder per input (click the folder icon) or drag multiple folders. Folder names will be used as prefixes with sequential numbers (e.g., Folder-1, Folder-2).</p>
     </div>
 
     <div>
