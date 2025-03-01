@@ -60,7 +60,14 @@ dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
     console.log('Drop detected, items:', e.dataTransfer.items.length);
-    const folderItems = Array.from(e.dataTransfer.items).filter(item => item.webkitGetAsEntry().isDirectory);
+    const folderItems = Array.from(e.dataTransfer.items).filter(item => {
+        try {
+            return item.webkitGetAsEntry().isDirectory;
+        } catch (error) {
+            console.warn('Skipping item due to error:', error);
+            return false;
+        }
+    });
     if (folderItems.length === 0) {
         alert('Please drop folders only.');
         return;
@@ -81,8 +88,10 @@ dropZone.addEventListener('drop', (e) => {
                     } else {
                         promises.push(new Promise((fileResolve) => {
                             entry.file(file => {
-                                console.log(`Adding file: ${path}${entry.name}`);
-                                file.webkitRelativePath = path + entry.name;
+                                // Sanitize and simplify the path to avoid encoding issues
+                                const sanitizedPath = path + entry.name;
+                                console.log(`Adding file: ${sanitizedPath}`);
+                                file.webkitRelativePath = sanitizedPath.replace(/[^a-zA-Z0-9\-_/]/g, '_'); // Replace special chars
                                 files.push(file);
                                 fileResolve();
                             }, error => {
